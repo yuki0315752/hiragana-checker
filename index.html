@@ -14,15 +14,15 @@ body{
     background:#fafafa;
 }
 
-h1{
+h1,h2{
     text-align:center;
 }
 
 #count{
     text-align:center;
     font-size:18px;
-    margin:15px 0;
     font-weight:bold;
+    margin:15px 0;
 }
 
 .controls{
@@ -79,9 +79,26 @@ button{
     grid-column:1 / -1;
     height:20px;
 }
+
+#history{
+    margin-top:15px;
+    padding:12px;
+    background:white;
+    border:1px solid #ccc;
+    border-radius:10px;
+    min-height:50px;
+}
+
+.history-item{
+    padding:6px 0;
+    border-bottom:1px solid #eee;
+}
+
+.history-item:last-child{
+    border-bottom:none;
+}
 </style>
 </head>
-
 <body>
 
 <h1>ひらがなチェッカー</h1>
@@ -99,6 +116,9 @@ button{
 </div>
 
 <div class="grid" id="grid"></div>
+
+<h2>入力履歴</h2>
+<div id="history"></div>
 
 <script>
 
@@ -138,6 +158,8 @@ const chars = [
 
 const grid = document.getElementById("grid");
 
+let historyList = [];
+
 chars.forEach(char => {
 
     if(char === "BREAK"){
@@ -161,6 +183,7 @@ chars.forEach(char => {
 
     div.onclick = () => {
         div.classList.toggle("off");
+        saveState();
         updateCount();
     };
 
@@ -174,28 +197,113 @@ function useWord(){
         .value
         .trim();
 
-    for(const ch of text){
+    if(text){
 
-        const cell =
-            document.getElementById("char-" + ch);
+        historyList.push(text);
 
-        if(cell){
-            cell.classList.add("off");
+        for(const ch of text){
+
+            const cell =
+                document.getElementById("char-" + ch);
+
+            if(cell){
+                cell.classList.add("off");
+            }
         }
+
+        renderHistory();
+        saveState();
+        updateCount();
     }
 
     document.getElementById("wordInput").value = "";
+}
 
-    updateCount();
+function renderHistory(){
+
+    const historyDiv =
+        document.getElementById("history");
+
+    historyDiv.innerHTML = "";
+
+    [...historyList].reverse().forEach(word => {
+
+        const div =
+            document.createElement("div");
+
+        div.className = "history-item";
+        div.textContent = word;
+
+        historyDiv.appendChild(div);
+    });
+}
+
+function saveState(){
+
+    const used = [];
+
+    document
+        .querySelectorAll(".cell.off")
+        .forEach(cell => {
+            used.push(cell.textContent);
+        });
+
+    localStorage.setItem(
+        "hiraganaChecker",
+        JSON.stringify(used)
+    );
+
+    localStorage.setItem(
+        "hiraganaHistory",
+        JSON.stringify(historyList)
+    );
+}
+
+function loadState(){
+
+    const saved =
+        localStorage.getItem(
+            "hiraganaChecker"
+        );
+
+    if(saved){
+
+        JSON.parse(saved).forEach(char => {
+
+            const cell =
+                document.getElementById(
+                    "char-" + char
+                );
+
+            if(cell){
+                cell.classList.add("off");
+            }
+        });
+    }
+
+    const savedHistory =
+        localStorage.getItem(
+            "hiraganaHistory"
+        );
+
+    if(savedHistory){
+
+        historyList =
+            JSON.parse(savedHistory);
+
+        renderHistory();
+    }
 }
 
 function updateCount(){
 
     const used =
-        document.querySelectorAll(".off").length;
+        document.querySelectorAll(".cell.off")
+        .length;
 
     const total =
-        document.querySelectorAll(".cell").length;
+        document.querySelectorAll(".cell")
+        .length;
 
     document.getElementById("count").textContent =
         `${used} / ${total}文字使用`;
@@ -203,14 +311,29 @@ function updateCount(){
 
 function resetAll(){
 
-    document.querySelectorAll(".cell")
+    document
+        .querySelectorAll(".cell")
         .forEach(cell =>
             cell.classList.remove("off")
         );
 
+    historyList = [];
+
+    document.getElementById("history")
+        .innerHTML = "";
+
+    localStorage.removeItem(
+        "hiraganaChecker"
+    );
+
+    localStorage.removeItem(
+        "hiraganaHistory"
+    );
+
     updateCount();
 }
 
+loadState();
 updateCount();
 
 </script>
