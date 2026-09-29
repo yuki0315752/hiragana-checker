@@ -8,7 +8,7 @@
 <style>
 body{
     font-family:sans-serif;
-    max-width:700px;
+    max-width:900px;
     margin:auto;
     padding:20px;
     background:#fafafa;
@@ -18,51 +18,66 @@ h1{
     text-align:center;
 }
 
+#count{
+    text-align:center;
+    font-size:18px;
+    margin:15px 0;
+    font-weight:bold;
+}
+
 .controls{
     display:flex;
     gap:10px;
-    margin-bottom:15px;
+    margin-bottom:20px;
 }
 
 input{
     flex:1;
-    padding:10px;
+    padding:12px;
     font-size:18px;
 }
 
 button{
-    padding:10px 16px;
+    padding:12px 20px;
     font-size:16px;
     cursor:pointer;
 }
 
-#count{
-    margin-bottom:15px;
-    font-size:18px;
-    text-align:center;
-}
-
 .grid{
     display:grid;
-    grid-template-columns:repeat(5,1fr);
+    grid-template-columns:repeat(5,70px);
+    justify-content:center;
     gap:8px;
 }
 
 .cell{
     border:1px solid #ccc;
     border-radius:10px;
-    padding:15px 0;
     text-align:center;
+    padding:15px 0;
     font-size:24px;
     background:white;
     cursor:pointer;
     user-select:none;
 }
 
+.cell:hover{
+    background:#f3f3f3;
+}
+
 .off{
     background:#d3d3d3;
     color:#888;
     text-decoration:line-through;
+}
+
+.blank{
+    visibility:hidden;
+}
+
+.break-space{
+    grid-column:1 / -1;
+    height:20px;
 }
 </style>
 </head>
@@ -87,40 +102,58 @@ button{
 
 <script>
 
-JavaScript
 const chars = [
- 
+
 "あ","か","さ","た","な",
 "い","き","し","ち","に",
 "う","く","す","つ","ぬ",
 "え","け","せ","て","ね",
 "お","こ","そ","と","の",
- 
-"ま","は","ら","や","わ",
-"み","ひ","り","ゆ","を",
-"む","ふ","る","よ","ん",
-"め","へ","れ",
-"も","ほ","ろ",
- 
+
+"BREAK",
+
+"ま","は","や","ら","わ",
+"み","ひ","","り","を",
+"む","ふ","ゆ","る","ん",
+"め","へ","","れ","",
+"も","ほ","よ","ろ","",
+
+"BREAK",
+
 "が","ざ","だ","ば","ぱ",
 "ぎ","じ","ぢ","び","ぴ",
 "ぐ","ず","づ","ぶ","ぷ",
 "げ","ぜ","で","べ","ぺ",
 "ご","ぞ","ど","ぼ","ぽ",
- 
-"ぁ","ゃ","っ",
-"ぃ","ゅ","ゎ",
-"ぅ","ょ",
-"ぇ",
-"ぉ"
- 
+
+"BREAK",
+
+"ぁ","ゃ","っ","","",
+"ぃ","","ゅ","ゎ","",
+"ぅ","","ょ","","",
+"ぇ","","","","",
+"ぉ","","","",""
+
 ];
 
 const grid = document.getElementById("grid");
 
 chars.forEach(char => {
 
+    if(char === "BREAK"){
+        const spacer = document.createElement("div");
+        spacer.className = "break-space";
+        grid.appendChild(spacer);
+        return;
+    }
+
     const div = document.createElement("div");
+
+    if(char === ""){
+        div.className = "blank";
+        grid.appendChild(div);
+        return;
+    }
 
     div.className = "cell";
     div.textContent = char;
@@ -132,7 +165,6 @@ chars.forEach(char => {
     };
 
     grid.appendChild(div);
-
 });
 
 function useWord(){
@@ -162,15 +194,19 @@ function updateCount(){
     const used =
         document.querySelectorAll(".off").length;
 
+    const total =
+        document.querySelectorAll(".cell").length;
+
     document.getElementById("count").textContent =
-        `${used} / ${chars.length}文字使用`;
+        `${used} / ${total}文字使用`;
 }
 
 function resetAll(){
 
     document.querySelectorAll(".cell")
-    .forEach(cell =>
-        cell.classList.remove("off"));
+        .forEach(cell =>
+            cell.classList.remove("off")
+        );
 
     updateCount();
 }
